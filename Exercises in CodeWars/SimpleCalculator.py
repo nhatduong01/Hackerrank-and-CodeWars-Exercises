@@ -74,5 +74,5 @@ class Calculator(object):
         return storage_stack.pop()
 
 
-print(Calculator().evaluate("1.1 * 2.2 * 3.3"))
+print(Calculator().evaluate("12* 123/(-5 + 2)"))
 #print(to_postfix("1.1 + 2.2 + 3.3"))
