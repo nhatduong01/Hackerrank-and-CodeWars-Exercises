@@ -12,6 +12,18 @@ def isFloat(str_val):
         return False
 
 
+def validNegate(string, prev_pos, prev_oper, curr_pos):
+    if prev_oper == None or prev_pos == None:
+        return True
+    if curr_pos - 1 >= 0:
+        if string[curr_pos-1] == '*' or string[curr_pos-1] == '/':
+            for i in range(prev_pos+1, curr_pos-1):
+                if string[i] in ['+', '-', '*', '/']:
+                    return True
+            return False
+    return True
+
+
 def prec(Operator):
     if (Operator == '/' or Operator == '*'):
         return 2
@@ -58,32 +70,39 @@ def analyse(string):
                     j += 1
                 new_string = string[i+2:j - 1]
                 new_string = analyse(new_string)
-                # if (j < len(string) and (string[j] == '*' or string[j] == '/')):
-                #     i += 1
-                #     continue
                 idx = 0
+                operators = ['+', '-', '*', '/']
+                prev_oper = None
+                prev_idx = None
                 while(idx < len(new_string)):
+                    if new_string[idx] in operators:
+                        prev_oper = new_string[idx]
+                        prev_idx = idx
                     if new_string[idx] == '(':
                         stack.append(new_string[idx])
                     elif new_string[idx] == ')':
                         stack.pop()
-                    elif new_string[idx] == '+' and len(stack) == 0:
+                    elif new_string[idx] == '+' and len(stack) == 0 and validNegate(new_string, prev_idx, prev_oper, idx):
                         new_string = new_string[:idx] + \
                             '-' + new_string[idx+1:]
-                    elif new_string[idx] == '-' and len(stack) == 0:
+                    elif new_string[idx] == '-' and len(stack) == 0 and validNegate(new_string, prev_idx, prev_oper, idx):
                         new_string = new_string[:idx] + \
                             '+' + new_string[idx+1:]
                     idx += 1
                 if (last_oper >= 0 and (string[last_oper] == '*' or string[last_oper] == '/')) or (j < len(string) and (string[j] == '*' or string[j] == '/')):
                     if '-' in new_string or '+' in new_string:
-                        string = string[:i]+'(' + new_string + string[j-1:]
+                        if (last_oper >= 0 and (string[last_oper] == '*' or string[last_oper] == '/')) or string[:i] == '':
+                            string = string[:i]+'(' + new_string + string[j-1:]
+                        else:
+                            string = string[:i] + \
+                                '+(' + new_string + string[j-1:]
                     else:
                         string = string[:i+1] + new_string + string[j:]
                     i = j
                     continue
                 idx = i + 2
                 next_char = string[idx]
-                if next_char.isnumeric():
+                if next_char.isnumeric() or next_char == '(':
                     string = string[:i+1] + new_string + string[j:]
                 else:
                     string = string[:i] + new_string + string[j:]
@@ -247,15 +266,25 @@ tests = [
     ["5 - 1", 4],
     ["5- 1", 4],
     ["5 -1", 4],
-    ["-(-5) - (12 - -89 + -(45)) * (16 / -((((-19 / 18)))) - 28)", 724.157894]
+    ["-(-5) - (12 - -89 + -(45)) * (16 / -((((-19 / 18)))) - 28)", 724.157894],
+    ["(-18) + (-21 * 19 - -(71)) + (-25 * (((-(-61 / -51)))) * -19)", -914.1372549019608],
+    ["-(81) - (-25 - 60 + -(97)) + (-25 + -((((64 + -9)))) - 59)", -38],
+    ["-(-96) - (-6 - 8 + (73)) / (-40 * (((-(-17 / -31)))) * 79)", 95.9659530900968],
+    ["(33) / (60 - 87 - (4)) / (11 + -((((-65 * -1)))) * -94)", -0.00017391212694531252]
 ]
-for test in tests:
-    print(calc(test[0]))
-print(calc("(-86) - (-71 + 59 * (60)) * (88 + ((((88 / 43)))) / -78)"))
-print(calc("(1 - 2) + -(-(-(-4)))"))
-print(calc("-(-59) + (-100 - -38 / -(66)) - (44 - -((((-72 * -16)))) - 58)"))
-print(calc("(-29) / (-14 / 60 + (59)) * (-93 * ((((-84 * -91)))) + 70)"))
-print(calc("(41) / (-51 / 84 / -(72)) + (-23 * -((((-32 - -96)))) / -62)"))
-print(calc("-(-80) * (-9 * 8 / -(3)) - (67 * -(((-(44 / -36)))) * -77)"))
-print(calc("(-36) - (93 - -35 + -(25)) - (-58 / ((((-49 - 24)))) - -49)"))
-print(calc("-23 * -((((-32 - -96)))) / -62"))
+# for test in tests:
+#     print(calc(test[0]))
+# print(calc("(-86) - (-71 + 59 * (60)) * (88 + ((((88 / 43)))) / -78)"))
+# print(calc("(1 - 2) + -(-(-(-4)))"))
+# print(calc("-(-59) + (-100 - -38 / -(66)) - (44 - -((((-72 * -16)))) - 58)"))
+# print(calc("(-29) / (-14 / 60 + (59)) * (-93 * ((((-84 * -91)))) + 70)"))
+# print(calc("(41) / (-51 / 84 / -(72)) + (-23 * -((((-32 - -96)))) / -62)"))
+# print(calc("-(-80) * (-9 * 8 / -(3)) - (67 * -(((-(44 / -36)))) * -77)"))
+# print(calc("(-36) - (93 - -35 + -(25)) - (-58 / ((((-49 - 24)))) - -49)"))
+# print(calc("-23 * -((((-32 - -96)))) / -62"))
+second_test = [["(-18) + (-21 * 19 - -(71)) + (-25 * (((-(-61 / -51)))) * -19)", -914.1372549019608],
+               ["-(81) - (-25 - 60 + -(97)) + (-25 + -((((64 + -9)))) - 59)", -38], [
+    "-(-96) - (-6 - 8 + (73)) / (-40 * (((-(-17 / -31)))) * 79)", 95.9659530900968],
+    ["(33) / (60 - 87 - (4)) / (11 + -((((-65 * -1)))) * -94)", -0.00017391212694531252]]
+#print(analyse("(123.45*(678.90 / (-2.5+ 11.5)-(((80 -(19))) *33.25)) / 20) - (123.45*(678.90 / (-2.5+ 11.5)-(((80 -(19))) *33.25)) / 20)"))
+print(calc("(45) - (67 - -59 * (25)) * (-66 / (((-(90 * 13)))) * -30)"))
